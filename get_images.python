@@ -1,0 +1,44 @@
+import requests;
+import json;
+import shutil;
+
+def main():
+	search_url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyBtgoP8ZGn0957qhIonNBJVujlCyRORLn8&q=__QUERY_STRING__&cx=000964073675025545726:wo_kco6h22w&start=__START__";
+	search_url = search_url.replace ("__QUERY_STRING__","megaphones");
+
+	count_multiplier = 10;
+	
+	# We need 1000 images. start tells index of starting image. 
+	for index in range(0,1):
+		curr_count = ""+str(1+count_multiplier *index);
+		search_endpoint = search_url.replace("__START__", curr_count );
+ 		print search_endpoint;
+		r = requests.get(search_endpoint);
+		content = r.json();
+		process_response(content);
+	
+	return;
+
+def process_response ( content ):
+	items = content['items'];	
+	for item in items:
+		if 'pagemap' in item:
+			pagemap_node = item['pagemap'];
+			if 'cse_thumbnail' in  pagemap_node:
+				node = pagemap_node['cse_thumbnail'];
+				if 'src' in node:
+					image_src = node['src'];
+					fetch_image(image_src);
+	return;
+
+
+def fetch_image():
+	print "in fetch_image\n";
+        response = requests.get(url, stream=True);
+	f = open('workfile', 'w');
+	f.write(response);
+	f.close(); 
+	return;
+
+main();
+
