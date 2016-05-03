@@ -1,44 +1,64 @@
 import requests;
 import json;
-import shutil;
+import os;
+output_path = "Output";
+
+try:
+    os.makedirs(output_path);
+except OSError:
+    pass;
+
+photo_count_index=0;
+photo_name_string = "photo";
+
+####  WHAT YOU NEED TO SEARCH HERE!! #####
+query_string = "megaphone,bullhorn loudspeaker";
+
+#### Number of images,max 100 #####
+target_count = 100;
+
+search_url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyBtgoP8ZGn0957qhIonNBJVujlCyRORLn8&q=__QUERY_STRING__&cx=000964073675025545726:wo_kco6h22w&start=__START__";
 
 def main():
-	search_url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyBtgoP8ZGn0957qhIonNBJVujlCyRORLn8&q=__QUERY_STRING__&cx=000964073675025545726:wo_kco6h22w&start=__START__";
-	search_url = search_url.replace ("__QUERY_STRING__","megaphones");
-
+	global query_string;
+	global search_url;
+	search_url = search_url.replace ("__QUERY_STRING__",query_string);
 	count_multiplier = 10;
-	
+	max_loop_invariant = int((target_count/count_multiplier)*1.5);	
 	# We need 1000 images. start tells index of starting image. 
-	for index in range(0,1):
+	for index in range(0,max_loop_invariant):
 		curr_count = ""+str(1+count_multiplier *index);
 		search_endpoint = search_url.replace("__START__", curr_count );
- 		print search_endpoint;
+		print search_endpoint;
 		r = requests.get(search_endpoint);
 		content = r.json();
-		process_response(content);
-	
+		process_response(content);	
 	return;
 
 def process_response ( content ):
+	if 'error' in content:
+		return;
 	items = content['items'];	
 	for item in items:
 		if 'pagemap' in item:
 			pagemap_node = item['pagemap'];
 			if 'cse_thumbnail' in  pagemap_node:
-				node = pagemap_node['cse_thumbnail'];
+				node = pagemap_node['cse_thumbnail'][0];
 				if 'src' in node:
 					image_src = node['src'];
 					fetch_image(image_src);
 	return;
 
-
-def fetch_image():
-	print "in fetch_image\n";
-        response = requests.get(url, stream=True);
-	f = open('workfile', 'w');
-	f.write(response);
+def fetch_image(image_src):
+	global photo_count_index;
+	global photo_name_string;
+        r = requests.get(image_src);
+	photo_count_index += 1;
+	curr_file = photo_name_string + str(photo_count_index) + ".jpg";
+	f = open( output_path+"/"+curr_file , 'w');
+	f.write(r.content);
 	f.close(); 
 	return;
 
 main();
-
+print "\n Manually curate images!!!\n";
